@@ -17,6 +17,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
 #include "MeleeCombatComponent.h"
+#include "Blueprint/UserWidget.h"
 
 AMeleePrototypeCharacter::AMeleePrototypeCharacter()
 {
@@ -56,6 +57,24 @@ AMeleePrototypeCharacter::AMeleePrototypeCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void AMeleePrototypeCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (PlayerHUDClass)
+	{
+		PlayerHUD = CreateWidget<UUserWidget>(GetWorld(), PlayerHUDClass);
+
+		if (PlayerHUD)
+		{
+			PlayerHUD->AddToViewport();
+		}
+	}
+
+	CurrentHealth = MaxHealth;
+	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
 void AMeleePrototypeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -151,6 +170,8 @@ float AMeleePrototypeCharacter::TakeDamage(float DamageAmount, FDamageEvent cons
 		return 0.0f;
 
 	CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.0f, MaxHealth);
+
+	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 
 	UE_LOG(
 		LogTemp,

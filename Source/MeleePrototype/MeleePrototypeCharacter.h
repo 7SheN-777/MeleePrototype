@@ -13,8 +13,11 @@ class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
 class UAnimMontage;
+class UUserWidget;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, CurrentHealth, float, MaxHealth);
 
 /**
  *  A simple player-controllable third person character
@@ -72,6 +75,7 @@ public:
 	/** Constructor */
 	AMeleePrototypeCharacter();	
 
+	virtual void BeginPlay();
 protected:
 
 	/** Initialize input action bindings */
@@ -114,14 +118,22 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
 	float MaxHealth = 100.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 	float CurrentHealth = 100.0f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> PlayerHUDClass;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> PlayerHUD;
+
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	UPROPERTY(BlueprintAssignable, Category = "Health")
+	FOnHealthChanged OnHealthChanged;
 private:
 };
 
