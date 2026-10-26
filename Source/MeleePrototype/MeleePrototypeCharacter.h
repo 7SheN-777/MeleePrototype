@@ -14,6 +14,7 @@ class UInputAction;
 struct FInputActionValue;
 class UAnimMontage;
 class UUserWidget;
+class AWeaponBase;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -134,6 +135,17 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnHealthChanged OnHealthChanged;
+
+
+
+//WeaponSystem:
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<AWeaponBase> WeaponClass;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<AWeaponBase> EquippedWeapon;
 private:
+	void SpawnAndEquipWeapon();
 };
 

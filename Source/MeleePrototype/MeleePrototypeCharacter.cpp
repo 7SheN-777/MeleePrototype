@@ -18,6 +18,7 @@
 #include "GameFramework/DamageType.h"
 #include "MeleeCombatComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "WeaponBase.h"
 
 AMeleePrototypeCharacter::AMeleePrototypeCharacter()
 {
@@ -72,6 +73,8 @@ void AMeleePrototypeCharacter::BeginPlay()
 			PlayerHUD->AddToViewport();
 		}
 	}
+
+	SpawnAndEquipWeapon();
 
 	CurrentHealth = MaxHealth;
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
@@ -199,6 +202,65 @@ float AMeleePrototypeCharacter::TakeDamage(float DamageAmount, FDamageEvent cons
 		}
 	}
 	return ActualDamage;
+}
+
+void AMeleePrototypeCharacter::SpawnAndEquipWeapon()
+{
+	if (!WeaponClass)
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("WeaponClass is not set.")
+		);
+		return;
+	}
+
+	USkeletalMeshComponent* CharacterMesh = GetMesh();
+
+	if (!CharacterMesh || !CharacterMesh->DoesSocketExist(TEXT("WeaponSocket")))
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("WeaponSocket was not found on character mesh.")
+		);
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	const FName SocketName(TEXT("WeaponSocket"));
+	EquippedWeapon = GetWorld()->SpawnActor<AWeaponBase>(WeaponClass, CharacterMesh->GetSocketTransform(SocketName), SpawnParams);
+	if (!EquippedWeapon)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("Failed to spawn weapon.")
+		);
+		return;
+	}
+
+	const bool bAttached = EquippedWeapon->AttachToComponent(CharacterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
+
+	if (!bAttached)
+	{
+		UE_LOG(
+			LogTemp,
+			Error,
+			TEXT("Failed to attach weapon to WeaponSocket.")
+		);
+
+		EquippedWeapon->Destroy();
+		EquippedWeapon = nullptr;
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Weapon equipped successfully."));
 }
 
 void AMeleePrototypeCharacter::Attack()
