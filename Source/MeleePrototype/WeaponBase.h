@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "WeaponBase.generated.h"
 
+class USceneComponent;
+
 UCLASS()
 class MELEEPROTOTYPE_API AWeaponBase : public AActor
 {
@@ -24,6 +26,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<USceneComponent> WeaponRoot;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UStaticMeshComponent> WeaponMesh;
 
